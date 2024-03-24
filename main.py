@@ -7,7 +7,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 
-# TODO: Add /?page={page_num} instead
 # TODO: Download html file of the offer
 # TODO: Take a screenshot of the offer?
 # TODO: Refactor results
@@ -73,6 +72,8 @@ def scrape_offers(driver, search_results):
         offer_seller = driver.find_element(By.CLASS_NAME, "css-1lcz6o7").text
         offer_seller_seniority = driver.find_element(By.CLASS_NAME, "css-16h6te1").text
         offer_localisation_city = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
+        offer_id = driver.find_element(By.CLASS_NAME, "css-12hdxwj").text
+        offer_id = offer_id[4:]
 
         search_time = datetime.now().strftime("%d/%m/%Y %H:%M")
 
@@ -82,12 +83,15 @@ def scrape_offers(driver, search_results):
                   'offer_seller': offer_seller,
                   'offer_seller_seniority': offer_seller_seniority,
                   'offer_localisation_city': offer_localisation_city,
-                  'search_time': search_time}
+                  'search_time': search_time,
+                  'offer_id': offer_id}
 
         search_results.append(result)
 
         # download_html(driver, ABSOLUTE_FILE_PATH + f"scraping {search_time}/{offer_title}.html")
-        # download_html(driver, ABSOLUTE_FILE_PATH + f"/{offer_title}.html")
+
+        # offer_title = offer_title.replace("\\", "").replace(f"/", "")
+        download_html(driver, ABSOLUTE_FILE_PATH + f"{offer_id}.html")
 
 
 def download_html(driver, file_path):
@@ -131,6 +135,7 @@ def main():
             break
 
     save_to_csv(search_results)
+
     # Shutdown the entire browser
     driver.quit()
 
