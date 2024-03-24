@@ -110,7 +110,7 @@ def main():
 
     accept_cookies(driver)
 
-    search_for_offers(driver, search_word="asus ultrabook")
+    search_for_offers(driver, search_word="botoks")
 
     next_page_button = driver.find_element(By.CSS_SELECTOR,
                                            value="a[data-testid='pagination-forward']").get_attribute("href")
@@ -123,14 +123,16 @@ def main():
             print(next_page_button)
 
             driver.get(next_page_button)
+            next_page_button = driver.find_element(By.CSS_SELECTOR,
+                                                   value="a[data-testid='pagination-forward']").get_attribute("href")
 
         except NoSuchElementException:
             print("No more pages to scrape.")
             break
 
-    # save_to_csv(search_results)
+    save_to_csv(search_results)
     # Shutdown the entire browser
-    # driver.quit()
+    driver.quit()
 
 
 if __name__ == "__main__":
