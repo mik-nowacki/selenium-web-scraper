@@ -6,10 +6,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+import re
 
-# TODO: Download html file of the offer
 # TODO: Take a screenshot of the offer?
-# TODO: Refactor results
+# TODO: WORK ON EXCEPTION HANDLING
 
 ABSOLUTE_FILE_PATH = f"E:/Strony GIF/"  # CHANGE THIS ACCORDING TO YOUR LIKING
 
@@ -59,39 +59,45 @@ def scrape_offers(driver, search_results):
     # Get "href" attribute from the <a> element
     for grid_item in listing_grid_container:
         link = grid_item.get_attribute("href")
-        print(link)
         links.append(link)
+
+    print(f"{len(links)} new offers added")
 
     # Extract information about the offer
     for link in links:
-        driver.get(link)
-        driver.implicitly_wait(3)
-        offer_title = driver.find_element(By.CLASS_NAME, "css-1juynto").text
-        offer_description = driver.find_element(By.CLASS_NAME, "css-1t507yq").text
-        offer_date = driver.find_element(By.CLASS_NAME, "css-19yf5ek").text
-        offer_seller = driver.find_element(By.CLASS_NAME, "css-1lcz6o7").text
-        offer_seller_seniority = driver.find_element(By.CLASS_NAME, "css-16h6te1").text
-        offer_localisation_city = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
-        offer_id = driver.find_element(By.CLASS_NAME, "css-12hdxwj").text
-        offer_id = offer_id[4:]
 
-        search_time = datetime.now().strftime("%d/%m/%Y %H:%M")
+        try:
+            driver.get(link)
 
-        result = {'offer_title': offer_title,
-                  'offer_description': offer_description,
-                  'offer_date': offer_date,
-                  'offer_seller': offer_seller,
-                  'offer_seller_seniority': offer_seller_seniority,
-                  'offer_localisation_city': offer_localisation_city,
-                  'search_time': search_time,
-                  'offer_id': offer_id}
+            driver.implicitly_wait(3)
+            offer_title = driver.find_element(By.CLASS_NAME, "css-1juynto").text
+            # offer_description = driver.find_element(By.CLASS_NAME, "css-1t507yq").text
+            # offer_date = driver.find_element(By.CLASS_NAME, "css-19yf5ek").text
+            offer_seller = driver.find_element(By.CLASS_NAME, "css-1lcz6o7").text
+            # offer_seller_seniority = driver.find_element(By.CLASS_NAME, "css-16h6te1").text
+            offer_localisation_city = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
+            offer_id = driver.find_element(By.CLASS_NAME, "css-12hdxwj").text
+            offer_id = offer_id[4:]
 
-        search_results.append(result)
+            search_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # download_html(driver, ABSOLUTE_FILE_PATH + f"scraping {search_time}/{offer_title}.html")
+            result = {'title': "'" + offer_title + "'",
+                      'name': "'" + offer_seller + "'",
+                      'workers': "",
+                      'address': offer_localisation_city,
+                      'link': link,
+                      'html': "'" + offer_id + ".html" + "'",
+                      'ss': "",
+                      'timestamp': search_time}
 
-        # offer_title = offer_title.replace("\\", "").replace(f"/", "")
-        download_html(driver, ABSOLUTE_FILE_PATH + f"{offer_id}.html")
+            search_results.append(result)
+
+            download_html(driver, ABSOLUTE_FILE_PATH + f"{offer_id}.html")
+
+        # If a link fails, continue to the next one
+        except Exception as err:
+            print(f"Error occurred: {err}")
+            continue
 
 
 def download_html(driver, file_path):
@@ -102,42 +108,50 @@ def download_html(driver, file_path):
 def save_to_csv(search_results):
     # Save data to .csv file
     df = pd.DataFrame(search_results)
-    df.to_csv('search_results.csv')
+    df.to_csv('search_results.csv', index=False)
 
 
 def main():
     driver = setup_chrome_driver()
     search_results = []
+    keywords = ["botox", "botoks", "botulaks", "rentox"]
 
     # Specify a website you want to scrape
     go_to_website(driver, address="https://www.olx.pl/")
 
     accept_cookies(driver)
 
-    search_for_offers(driver, search_word="botoks")
+    try:
+        for keyword in keywords:
+            search_for_offers(driver, search_word=keyword)
 
-    next_page_button = driver.find_element(By.CSS_SELECTOR,
-                                           value="a[data-testid='pagination-forward']").get_attribute("href")
+            # Find the total number of offers for a given keyword
+            offers_found = driver.find_element(By.CLASS_NAME, "css-7ddzao").text
+            pattern = r'\d+'
+            number_of_offers = re.findall(pattern, offers_found)
+            print(f'keyword: {keyword} | offers found: {number_of_offers[0]}')
 
-    while True:
-        try:
+            next_page_ulr = driver.find_element(By.CSS_SELECTOR,
+                                                value="a[data-testid='pagination-forward']").get_attribute("href")
 
-            scrape_offers(driver, search_results)
+            while True:
+                print(f"Scraped offers: {len(search_results)}")
+                scrape_offers(driver, search_results)
 
-            print(next_page_button)
+                driver.get(next_page_ulr)
+                try:
+                    next_page_ulr = driver.find_element(By.CSS_SELECTOR,
+                                                        value="a[data-testid='pagination-forward']").get_attribute("href")
+                except NoSuchElementException:
+                    break
 
-            driver.get(next_page_button)
-            next_page_button = driver.find_element(By.CSS_SELECTOR,
-                                                   value="a[data-testid='pagination-forward']").get_attribute("href")
+    except NoSuchElementException as err:
+        print(f"Error occurred: {err}")
 
-        except NoSuchElementException:
-            print("No more pages to scrape.")
-            break
-
-    save_to_csv(search_results)
-
-    # Shutdown the entire browser
-    driver.quit()
+    finally:
+        save_to_csv(search_results)
+        print(len(search_results))
+        # driver.quit()
 
 
 if __name__ == "__main__":
