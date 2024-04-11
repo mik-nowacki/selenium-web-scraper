@@ -10,6 +10,7 @@ import re
 
 # TODO: Take a screenshot of the offer?
 # TODO: WORK ON EXCEPTION HANDLING
+# TODO: Remove duplicate rows
 
 ABSOLUTE_FILE_PATH = f"E:/Strony GIF/"  # CHANGE THIS ACCORDING TO YOUR LIKING
 
@@ -71,9 +72,9 @@ def scrape_offers(driver, search_results):
 
             driver.implicitly_wait(3)
             offer_title = driver.find_element(By.CLASS_NAME, "css-1juynto").text
-            # offer_description = driver.find_element(By.CLASS_NAME, "css-1t507yq").text
+            offer_seller_name = driver.find_element(By.CLASS_NAME, "css-1lcz6o7").text
+            offer_description = driver.find_element(By.CLASS_NAME, "css-1t507yq").text
             # offer_date = driver.find_element(By.CLASS_NAME, "css-19yf5ek").text
-            offer_seller = driver.find_element(By.CLASS_NAME, "css-1lcz6o7").text
             # offer_seller_seniority = driver.find_element(By.CLASS_NAME, "css-16h6te1").text
             offer_localisation_city = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
             offer_id = driver.find_element(By.CLASS_NAME, "css-12hdxwj").text
@@ -82,8 +83,8 @@ def scrape_offers(driver, search_results):
             search_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             result = {'title': "'" + offer_title + "'",
-                      'name': "'" + offer_seller + "'",
-                      'workers': "",
+                      'name': "'" + offer_seller_name + "'",
+                      'description': "'" + offer_description + "'",
                       'address': offer_localisation_city,
                       'link': link,
                       'html': "'" + offer_id + ".html" + "'",
