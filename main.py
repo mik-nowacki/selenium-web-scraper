@@ -82,12 +82,21 @@ def scrape_offers(driver, search_results):
 
             search_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            result = {'title': "'" + offer_title + "'",
-                      'name': "'" + offer_seller_name + "'",
-                      'description': "'" + offer_description + "'",
+            # result = {'title': '"' + offer_title + '"',
+            #           'name': '"' + offer_seller_name + '"',
+            #           'description': '"' + offer_description + '"',
+            #           'address': offer_localisation_city,
+            #           'link': link,
+            #           'html': '"' + offer_id + ".html" + '"',
+            #           'ss': "",
+            #           'timestamp': search_time}
+
+            result = {'title': '"' + offer_title + '"',
+                      'name': '"' + offer_seller_name + '"',
+                      'description':   offer_description,
                       'address': offer_localisation_city,
                       'link': link,
-                      'html': "'" + offer_id + ".html" + "'",
+                      'html':   offer_id + ".html",
                       'ss': "",
                       'timestamp': search_time}
 
@@ -115,7 +124,7 @@ def save_to_csv(search_results):
 def main():
     driver = setup_chrome_driver()
     search_results = []
-    keywords = ["botox", "botoks", "botulaks", "rentox"]
+    keywords = ["botoks", "botox", "botulaks", "rentox"]
 
     # Specify a website you want to scrape
     go_to_website(driver, address="https://www.olx.pl/")
