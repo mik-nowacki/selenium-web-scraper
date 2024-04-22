@@ -30,6 +30,3 @@
 #     print("Liczba znalezionych ogłoszeń:", number+10)
 # else:
 #     print("Nie znaleziono liczby w tekście.")
-
-for i in range(0, 10):
-    print(i)
