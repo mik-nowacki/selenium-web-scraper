@@ -1,32 +1,11 @@
-# from datetime import datetime
-#
-# import pandas as pd
-#
-#
-# search_results = pd.read_csv('search_results.csv')
-#
-# print(search_results.head())
+import pandas as pd
 
-# link = "https://www.olx.pl/oferta/praca/lekarz-medycyny-estetycznej-CID4-IDZDPJv.html"
-#
-# if 'praca' in link:
-#     print("It's a job offer!")
+googler_output = pd.read_csv('googler_output.csv', sep=';')
+output_scraper = pd.read_csv('output_scrapper.csv', sep=';')
 
-# import re
-#
-# # Przykładowy ciąg znaków
-# text = "Znaleźliśmy 551 ogłoszeń"
-#
-# # Wzorzec do wyszukiwania liczby
-# pattern = r'\d+'
-#
-# # Wyszukiwanie liczby w tekście
-# matches = re.findall(pattern, text)
-#
-# if matches:
-#     # Pierwsze dopasowanie
-#     number = int(matches[0])
-#     print("Liczba znalezionych ogłoszeń:", number)
-#     print("Liczba znalezionych ogłoszeń:", number+10)
-# else:
-#     print("Nie znaleziono liczby w tekście.")
+print(googler_output.head())
+print(googler_output.columns)
+print('############################################################')
+print(output_scraper.head())
+print(output_scraper.columns)
+

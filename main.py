@@ -8,11 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 import re
 
-# TODO: Take a screenshot of the offer?
-# TODO: WORK ON EXCEPTION HANDLING
-# TODO: Remove duplicate rows
-
-ABSOLUTE_FILE_PATH = f"E:/Strony GIF/"  # CHANGE THIS ACCORDING TO YOUR LIKING
+ABSOLUTE_FILE_PATH = f"E:/Strony GIF/"  # Provide file directory to store html files
+FILE_NAME = 'search_results.csv'  # File name for the offers' scraped data
+KEYWORDS = ["botoks", "botox", "botulaks", "rentox"]  # Specify desired words here
 
 
 #  Set up a driver to use Chrome browser
@@ -36,7 +34,7 @@ def accept_cookies(driver):
     accept_btn.click()
 
 
-#  Search for offers connected to a given keyword
+#  Search for offers related to a given keyword
 def search_for_offers(driver, search_word):
     # Find the "Search" <input> by ID
     search_bar = driver.find_element(By.ID, value="search")
@@ -76,25 +74,16 @@ def scrape_offers(driver, search_results):
             offer_description = driver.find_element(By.CLASS_NAME, "css-1t507yq").text
             # offer_date = driver.find_element(By.CLASS_NAME, "css-19yf5ek").text
             # offer_seller_seniority = driver.find_element(By.CLASS_NAME, "css-16h6te1").text
-            offer_localisation_city = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
+            offer_address = driver.find_element(By.CLASS_NAME, "css-1cju8pu").text
             offer_id = driver.find_element(By.CLASS_NAME, "css-12hdxwj").text
             offer_id = offer_id[4:]
 
             search_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # result = {'title': '"' + offer_title + '"',
-            #           'name': '"' + offer_seller_name + '"',
-            #           'description': '"' + offer_description + '"',
-            #           'address': offer_localisation_city,
-            #           'link': link,
-            #           'html': '"' + offer_id + ".html" + '"',
-            #           'ss': "",
-            #           'timestamp': search_time}
-
             result = {'title': '"' + offer_title + '"',
                       'name': '"' + offer_seller_name + '"',
                       'description':   offer_description,
-                      'address': offer_localisation_city,
+                      'address': offer_address,
                       'link': link,
                       'html':   offer_id + ".html",
                       'ss': "",
@@ -118,13 +107,13 @@ def download_html(driver, file_path):
 def save_to_csv(search_results):
     # Save data to .csv file
     df = pd.DataFrame(search_results)
-    df.to_csv('search_results.csv', index=False)
+    # Specify the name of the file
+    df.to_csv(FILE_NAME, index=False)
 
 
 def main():
     driver = setup_chrome_driver()
     search_results = []
-    keywords = ["botoks", "botox", "botulaks", "rentox"]
 
     # Specify a website you want to scrape
     go_to_website(driver, address="https://www.olx.pl/")
@@ -132,19 +121,23 @@ def main():
     accept_cookies(driver)
 
     try:
-        for keyword in keywords:
+        for keyword in KEYWORDS:
+            # Pass keywords to a search bar
             search_for_offers(driver, search_word=keyword)
 
-            # Find the total number of offers for a given keyword
+            # Print the number of offers for a given keyword (for easier track of progress)
             offers_found = driver.find_element(By.CLASS_NAME, "css-7ddzao").text
             pattern = r'\d+'
             number_of_offers = re.findall(pattern, offers_found)
             print(f'keyword: {keyword} | offers found: {number_of_offers[0]}')
 
+            # Find the element responsible for the next page with the offers for a given keyword (#1, #2 ... #n)
             next_page_ulr = driver.find_element(By.CSS_SELECTOR,
                                                 value="a[data-testid='pagination-forward']").get_attribute("href")
 
             while True:
+                # Proceed to scrape each offer, known issues: error 403, access denied by OLX (even with VPN).
+                # If an error occurs, proceed to the next offer.
                 print(f"Scraped offers: {len(search_results)}")
                 scrape_offers(driver, search_results)
 
@@ -159,9 +152,10 @@ def main():
         print(f"Error occurred: {err}")
 
     finally:
+        # Save data to file after scraping is finished.
         save_to_csv(search_results)
         print(len(search_results))
-        # driver.quit()
+        driver.quit()
 
 
 if __name__ == "__main__":
